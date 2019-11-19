@@ -10,7 +10,7 @@ The main goal here is to create multiple adapters to apply on session handler, i
 
 ### Usage goal:
 ```php
-SessionHandler::register('file');
+SessionHandler::register('files');
 $_SESSION['foo'] = 'bar'; // should write on file
 echo $_SESSION['foo']; // should return 'bar' from written file
 

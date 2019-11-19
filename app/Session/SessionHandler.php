@@ -9,7 +9,7 @@
  *
  * <code>
  *  // use file
- *  SessionHandler::register('file');
+ *  SessionHandler::register('files');
  *  $_SESSION['foo'] = 'bar'; // should write on file
  *  echo $_SESSION['foo']; // should return 'bar' from written file
  *
