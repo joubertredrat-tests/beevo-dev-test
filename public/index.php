@@ -1,7 +1,6 @@
 <?php
 
-
-require __DIR__ . "app/Session/SessionHandler.php";
+require __DIR__ . '/../bootstrap.php';
 
 
 // instantiate session handler
