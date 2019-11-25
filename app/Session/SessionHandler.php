@@ -1,4 +1,7 @@
 <?php
+
+declare(strict_types=1);
+
 /**
  * SessionHandler -> From a given adapter type, apply it to PHP the core.
  *
@@ -21,33 +24,79 @@
 
 namespace App\Session;
 
+use App\Session\Adapter\Files;
+use App\Session\Adapter\Redis;
+use App\Exception\Session\SessionHandler\UnknownAdapterException;
+use App\Session\Factory\FilesFactory;
+use App\Session\Factory\RedisFactory;
+use function array_key_exists;
+use function session_set_save_handler;
+
 /**
  * Class SessionHandler
  */
 class SessionHandler
 {
+    /**
+     * @var string
+     */
+    protected $adapterType;
 
-    public $adapterType;
+    /**
+     * @var array
+     */
+    protected $adapterConfig;
 
 
     /**
      * SessionService constructor.
      *
-     * @param string $adapter Name of adapter (eg: redis)
+     * @param string $adapterType Name of adapter (eg: redis)
+     * @param array $adapterConfig
      */
-    final public function __construct($adapter)
+    final public function __construct(string $adapterType, array $adapterConfig = [])
     {
-        $this->adapterType = $adapter;
+        $this->adapterType = $adapterType;
+        $this->adapterConfig = $adapterConfig;
     }
 
-
-    public static function register($adapter)
+    /**
+     * @param string $adapterType
+     * @param array $adapterConfig
+     * @throws UnknownAdapterException
+     */
+    public static function register(string $adapterType, array $adapterConfig = []): void
     {
-        return (new self($adapter))->getAdapter();
+        $adapter = (new self($adapterType, $adapterConfig))
+            ->getAdapter()
+        ;
+
+        session_set_save_handler($adapter, true);
     }
 
+    /**
+     * @return mixed
+     * @throws UnknownAdapterException
+     */
     protected function getAdapter()
     {
-        // ...
+        if (!array_key_exists($this->adapterType, self::getAdaptersAvailable())) {
+            throw UnknownAdapterException::throwNew($this->adapterType);
+        }
+
+        $adapterFactory = self::getAdaptersAvailable()[$this->adapterType];
+
+        return $adapterFactory::createFromSessionHandler($this->adapterConfig);
+    }
+
+    /**
+     * @return array
+     */
+    protected static function getAdaptersAvailable(): array
+    {
+        return [
+            Files::getName() => FilesFactory::class,
+            Redis::getName() => RedisFactory::class,
+        ];
     }
 }
